@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RptDataSource xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="MSCRM_DataSource">
+  <ConnectionProperties>
+    <Extension>SQL</Extension>
+    <ConnectString>Data Source=PINUAC01\CRMADVRPT;Initial Catalog=McMasterInitialPass_MSCRM</ConnectString>
+  </ConnectionProperties>
+  <DataSourceID>327d9bfe-c6e8-40e0-bceb-205950d47fcb</DataSourceID>
+</RptDataSource>
