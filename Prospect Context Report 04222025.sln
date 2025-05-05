@@ -5,6 +5,11 @@ VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "Prospect Context Report 04222025", "Prospect Context Report 04222025\Prospect Context Report 04222025.rptproj", "{9FBBDE40-A5E0-4904-BA06-55519281C2F6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL Programs", "SQL Programs", "{B90B79FB-D91D-4479-A54C-7C28ED3FD2B1}"
+	ProjectSection(SolutionItems) = preProject
+		Prospect Context Report 04222025\SQLQuery1.sql = Prospect Context Report 04222025\SQLQuery1.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Default = Debug|Default
