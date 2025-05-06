@@ -31,3 +31,49 @@ select top 1000 * from Filteredelcn_businessrelationship fbr
 where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
 and fbr.elcn_businessrelationshipstatusidname = 'Active'
 and fbr.elcn_businessrelationshiptypeidname = 'Primary Employer'
+
+--Business Address Info
+select  top 1 
+elcn_street1 AS BUS_STREET1,
+elcn_city AS BUS_CITY,
+elcn_stateprovinceidname AS BUS_STATE,
+elcn_countryname AS BUS_COUNTRY,
+elcn_postalcode AS BUS_ZIPCODE
+from Filteredelcn_addressassociation addas
+left join Filteredelcn_address fea -- connect with elcn_personid
+on addas.elcn_addressid = fea.elcn_addressid
+where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+and elcn_addressstatusidname = 'Current' 
+and elcn_addresstypeidname = 'Business'
+
+--Personal Address Info
+select top 1
+elcn_street1 AS BUS_STREET1,
+elcn_city AS BUS_CITY,
+elcn_stateprovinceidname AS BUS_STATE,
+elcn_countryname AS BUS_COUNTRY,
+elcn_postalcode AS BUS_ZIPCODE
+from Filteredelcn_addressassociation addas
+left join Filteredelcn_address fea -- connect with elcn_personid
+on addas.elcn_addressid = fea.elcn_addressid
+where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+and elcn_addressstatusidname = 'Current' 
+and elcn_addresstypeidname = 'Home'
+
+--Business Phone
+select top 1
+elcn_personid,
+elcn_phonenumber AS BUS_PHONE
+from Filteredelcn_phone
+where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+and elcn_phonestatusidname = 'Active'
+and elcn_phonetypename = 'Business'
+
+--Home Phone
+select top 1
+elcn_personid,
+elcn_phonenumber AS BUS_PHONE
+from Filteredelcn_phone
+where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+and elcn_phonestatusidname = 'Active'
+and elcn_phonetypename = 'Home'
