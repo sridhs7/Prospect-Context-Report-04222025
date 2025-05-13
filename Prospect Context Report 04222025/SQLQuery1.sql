@@ -7,14 +7,22 @@ elcn_SortName AS PREF_NAME_SORT,
 fullname AS FULL_NAME,
 EMailAddress1 AS EMAIL_ADDRESS
 from ContactBase cb)
-select pd.*, pre.elcn_person2idname AS SPOUSE_GUID, pre.elcn_person2idname AS SPOUSE_NAME 
+select pd.*--, pre.elcn_person2idname AS SPOUSE_GUID, pre.elcn_person2idname AS SPOUSE_NAME 
+INTO #temp_personal_details
 from Personal_Details pd
-left join  Filteredelcn_personalrelationship pre 
-on pd.personId = pre.elcn_person1id
-where (pre.elcn_relationshiptype1idname = 'Spouse' or pre.elcn_relationshiptype1idname is null)
-and pd.personId = '0CF255E9-B005-4794-AD2F-382F371D6719'
+where FULL_NAME like '%greco%'
+
+CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(personId)
 
 -- TO DO: Get Spouse Advance ID and Constituent
+select personId, pre.elcn_person2id AS Spouse_Guid, pre.elcn_person2idname AS Spouse_Name
+from #temp_personal_details p
+left join Filteredelcn_personalrelationship pre
+on p.personId = pre.elcn_person1id
+where (pre.elcn_relationshiptype1idname = 'Spouse' or pre.elcn_relationshiptype1idname is null)
+and ( pre.elcn_person2idname is not null and pre.elcn_person2idname <> ' ')
+
+
 
 --Education
 select  
@@ -77,3 +85,6 @@ from Filteredelcn_phone
 where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
 and elcn_phonestatusidname = 'Active'
 and elcn_phonetypename = 'Home'
+
+drop table #temp_personal_details
+
