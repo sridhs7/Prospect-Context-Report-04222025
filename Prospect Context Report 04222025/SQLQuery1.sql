@@ -15,14 +15,19 @@ where FULL_NAME like '%greco%'
 CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(personId)
 
 -- TO DO: Get Spouse Advance ID and Constituent
-select personId, pre.elcn_person2id AS Spouse_Guid, pre.elcn_person2idname AS Spouse_Name
+select personId, pre.elcn_person2id AS Spouse_Guid, pre.elcn_person2idname AS Spouse_Name, fca.elcn_constituenttypeidname as Spouse_Constituent_Type
+INTO #temp_spouse_details
 from #temp_personal_details p
 left join Filteredelcn_personalrelationship pre
 on p.personId = pre.elcn_person1id
-where (pre.elcn_relationshiptype1idname = 'Spouse' or pre.elcn_relationshiptype1idname is null)
+left join Filteredelcn_constituentaffiliation fca
+on pre.elcn_person2id = fca.elcn_personid
+where (pre.elcn_relationshiptype1idname = 'Spouse') --or pre.elcn_relationshiptype1idname is null)
 and ( pre.elcn_person2idname is not null and pre.elcn_person2idname <> ' ')
+and pre.statuscodename = 'Active'
 
-
+CREATE NONCLUSTERED INDEX IDX_tcd2 ON #temp_spouse_details(personId)
+select * from #temp_spouse_details
 
 --Education
 select  
@@ -35,7 +40,7 @@ where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
 order by fe.elcn_degreeyear 
 
 --Business Info
-select top 1000 * from Filteredelcn_businessrelationship fbr
+select top 1 * from Filteredelcn_businessrelationship fbr
 where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
 and fbr.elcn_businessrelationshipstatusidname = 'Active'
 and fbr.elcn_businessrelationshiptypeidname = 'Primary Employer'
@@ -86,5 +91,13 @@ where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
 and elcn_phonestatusidname = 'Active'
 and elcn_phonetypename = 'Home'
 
+------**** DATA CONSOLIDATION****---------------
+
+select pd.*
+from #temp_personal_details pd
+left join #temp_spouse_details sd
+on pd.personId = sd.personId
+
 drop table #temp_personal_details
+drop table #temp_spouse_details
 
