@@ -1,5 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:df="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition/defaultfontfamily" MustUnderstand="df">
+<Report MustUnderstand="df" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:df="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition/defaultfontfamily" xmlns:am="http://schemas.microsoft.com/sqlserver/reporting/authoringmetadata">
+  <am:AuthoringMetadata>
+    <am:CreatedBy>
+      <am:Name>SSDTRS</am:Name>
+      <am:Version>17.11.35327.3</am:Version>
+    </am:CreatedBy>
+    <am:UpdatedBy>
+      <am:Name>SSDTRS</am:Name>
+      <am:Version>17.11.35327.3</am:Version>
+    </am:UpdatedBy>
+    <am:LastModifiedTimestamp>2025-05-20T14:30:48.0795621Z</am:LastModifiedTimestamp>
+  </am:AuthoringMetadata>
   <df:DefaultFontFamily>Segoe UI</df:DefaultFontFamily>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
@@ -16,22 +27,22 @@
         <CommandText>-- Personal Details
 With Personal_Details AS(
 select 
-contactId AS personId,
+contactId AS CRMAF_contactId,
 elcn_PrimaryID AS ID_NUMBER, 
 elcn_SortName AS PREF_NAME_SORT,
 fullname AS FULL_NAME,
 EMailAddress1 AS EMAIL_ADDRESS
-from ContactBase cb)
+from FilteredContact cb)
 select pd.*--, pre.elcn_person2idname AS SPOUSE_GUID, pre.elcn_person2idname AS SPOUSE_NAME 
 INTO #temp_personal_details
 from Personal_Details pd
-where FULL_NAME like '%greco%'
+--where FULL_NAME like '%greco%'
 
-CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(personId)
+CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(CRMAF_contactId)
 
 -- TO DO: Get Spouse Advance ID and Constituent
 SELECT 
-    p.personId, 
+    p.CRMAF_contactId, 
     pre.elcn_person2id AS Spouse_Guid, 
     pre.elcn_person2idname AS Spouse_Name, 
     fca.elcn_constituenttypeidname AS Spouse_Constituent_Type,
@@ -39,7 +50,7 @@ SELECT
 INTO #temp_spouse_details
 FROM #temp_personal_details p
 LEFT JOIN Filteredelcn_personalrelationship pre
-    ON p.personId = pre.elcn_person1id
+    ON p.CRMAF_contactId = pre.elcn_person1id
 LEFT JOIN Filteredelcn_constituentaffiliation fca
     ON pre.elcn_person2id = fca.elcn_personid
 LEFT JOIN ContactBase cb
@@ -109,7 +120,7 @@ CREATE NONCLUSTERED INDEX IDX_tcd3 ON #temp_pivoted_education(elcn_personid)
 ;WITH SpouseRanked AS (
     SELECT *,
         ROW_NUMBER() OVER (
-            PARTITION BY personId 
+            PARTITION BY CRMAF_contactId 
             ORDER BY 
                 CASE 
                     WHEN Spouse_Constituent_Type = 'Alumni' THEN 1 
@@ -119,7 +130,7 @@ CREATE NONCLUSTERED INDEX IDX_tcd3 ON #temp_pivoted_education(elcn_personid)
     FROM #temp_spouse_details
 )
 SELECT 
-    pd.personId,
+    pd.CRMAF_contactId,
     pd.ID_NUMBER,
     pd.PREF_NAME_SORT,
     pd.FULL_NAME,
@@ -135,10 +146,10 @@ SELECT
 pe.*
 FROM #temp_personal_details pd
 LEFT JOIN SpouseRanked sr
-    ON pd.personId = sr.personId
+    ON pd.CRMAF_contactId = sr.CRMAF_contactId
     AND sr.rn = 1
 LEFT JOIN #temp_pivoted_education pe
-ON pd.personId = pe.elcn_personid
+ON pd.CRMAF_contactId = pe.elcn_personid
 
 
 
@@ -148,8 +159,8 @@ drop table #temp_pivoted_education</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
-        <Field Name="personId">
-          <DataField>personId</DataField>
+        <Field Name="CRMAF_contactId">
+          <DataField>CRMAF_contactId</DataField>
           <rd:TypeName>System.Guid</rd:TypeName>
         </Field>
         <Field Name="ID_NUMBER">
@@ -283,6 +294,7 @@ drop table #temp_pivoted_education</CommandText>
             </Paragraphs>
             <rd:DefaultName>textbox1</rd:DefaultName>
             <Height>0.43in</Height>
+            <Width>27in</Width>
             <Style>
               <PaddingLeft>2pt</PaddingLeft>
               <PaddingRight>2pt</PaddingRight>
@@ -401,8 +413,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox2</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -441,8 +451,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox3</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -481,8 +489,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox4</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -521,8 +527,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox5</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -561,8 +565,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox6</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -601,8 +603,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox7</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -641,8 +641,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox8</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -681,8 +679,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox9</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -721,8 +717,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox10</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -761,8 +755,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox11</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -801,8 +793,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox12</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -841,8 +831,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox13</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -881,8 +869,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox14</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -921,8 +907,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox15</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -961,8 +945,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox16</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1001,8 +983,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox17</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1041,8 +1021,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox18</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1081,8 +1059,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox19</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1121,8 +1097,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox20</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1161,8 +1135,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox21</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1201,8 +1173,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox22</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1241,8 +1211,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox23</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1281,8 +1249,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox24</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1321,8 +1287,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox25</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1361,8 +1325,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox26</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1401,8 +1363,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox27</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1441,8 +1401,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>textbox28</rd:DefaultName>
-                          <Height>0.22in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1466,14 +1424,14 @@ drop table #temp_pivoted_education</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="personId">
+                        <Textbox Name="CRMAF_contactId">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!personId.Value</Value>
+                                  <Value>=Fields!CRMAF_contactId.Value</Value>
                                   <Style>
                                     <FontFamily />
                                     <Color>#333333</Color>
@@ -1483,9 +1441,7 @@ drop table #temp_pivoted_education</CommandText>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>personId</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
+                          <rd:DefaultName>CRMAF_contactId</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1522,8 +1478,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>ID_NUMBER</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1560,8 +1514,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>PREF_NAME_SORT</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1598,8 +1550,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>FULL_NAME</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1636,8 +1586,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>EMAIL_ADDRESS</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1674,8 +1622,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>Spouse_Guid</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1712,8 +1658,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>Spouse_Name</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1750,8 +1694,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>Spouse_Constituent_Type</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1788,8 +1730,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>Spouse_ID_NUMBER</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1826,8 +1766,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>Is_Spouse_Alumni</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1864,8 +1802,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>elcn_personid</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1902,8 +1838,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>LAST_DEG_YEAR</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1940,8 +1874,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>LAST_DEG_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -1978,8 +1910,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>LAST_DEG_SCHOOL_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2016,8 +1946,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>LAST_DEG_MAJOR1_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2054,8 +1982,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>SECOND_LAST_DEG_YEAR</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2092,8 +2018,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>SECOND_LAST_DEG_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2130,8 +2054,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>SECOND_LAST_SCHOOL_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2168,8 +2090,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>SECOND_LAST_DEG_MAJOR1_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2206,8 +2126,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>THIRD_LAST_DEG_YEAR</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2244,8 +2162,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>THIRD_LAST_DEG_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2282,8 +2198,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>THIRD_LAST_SCHOOL_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2320,8 +2234,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>THIRD_LAST_DEG_MAJOR1_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2358,8 +2270,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>FOURTH_LAST_DEG_YEAR</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2396,8 +2306,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>FOURTH_LAST_DEG_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2434,8 +2342,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>FOURTH_LAST_SCHOOL_CODE_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2472,8 +2378,6 @@ drop table #temp_pivoted_education</CommandText>
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>FOURTH_LAST_DEG_MAJOR1_DESC</rd:DefaultName>
-                          <Height>0.21in</Height>
-                          <Width>1in</Width>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -2547,6 +2451,9 @@ drop table #temp_pivoted_education</CommandText>
             </TablixRowHierarchy>
             <DataSetName>DataSet1</DataSetName>
             <Top>0.43in</Top>
+            <Height>0.43in</Height>
+            <Width>27in</Width>
+            <ZIndex>1</ZIndex>
             <Style />
           </Tablix>
         </ReportItems>
@@ -2571,6 +2478,6 @@ drop table #temp_pivoted_education</CommandText>
   </ReportParametersLayout>
   <Language>en-US</Language>
   <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
-  <rd:ReportUnitType>Invalid</rd:ReportUnitType>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
   <rd:ReportID>2d2f9d08-d3e5-49b6-baff-4336f12f596a</rd:ReportID>
 </Report>
