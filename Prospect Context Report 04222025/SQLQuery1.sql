@@ -39,7 +39,7 @@ WHERE
 
 --Education
 
-WITH RankedEducation AS (
+;WITH RankedEducation AS (
     SELECT 
         fe.elcn_personid,
         fe.elcn_degreeyear AS DEG_YEAR,
@@ -83,6 +83,12 @@ WITH RankedEducation AS (
     FROM RankedEducation
     GROUP BY elcn_personid
 )
+select * 
+INTO #temp_pivoted_education
+from PivotedEducation
+
+CREATE NONCLUSTERED INDEX IDX_tcd3 ON #temp_pivoted_education(elcn_personid)
+
 
 
 --Business Info
@@ -164,13 +170,18 @@ SELECT
     CASE 
         WHEN sr.Spouse_Constituent_Type = 'Alumni' THEN 'Y'
         ELSE 'N'
-    END AS Is_Spouse_Alumni
+    END AS Is_Spouse_Alumni,
+pe.*
 FROM #temp_personal_details pd
 LEFT JOIN SpouseRanked sr
     ON pd.personId = sr.personId
     AND sr.rn = 1
+LEFT JOIN #temp_pivoted_education pe
+ON pd.personId = pe.elcn_personid
+
 
 
 drop table #temp_personal_details
 drop table #temp_spouse_details
+drop table #temp_pivoted_education
 

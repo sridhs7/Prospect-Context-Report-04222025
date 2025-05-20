@@ -51,5 +51,8 @@
   <ItemGroup>
     <DataSource Include="MSCRM_DataSource.rds" />
   </ItemGroup>
+  <ItemGroup>
+    <Report Include="New Prospect Report.rdl" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Reporting Services\Microsoft.ReportingServices.MSBuilder.targets" />
 </Project>

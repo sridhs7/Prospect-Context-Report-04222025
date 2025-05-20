@@ -3,6 +3,7 @@
   <ConnectionProperties>
     <Extension>SQL</Extension>
     <ConnectString>Data Source=PINUAC01\CRMADVRPT;Initial Catalog=McMasterInitialPass_MSCRM</ConnectString>
+    <IntegratedSecurity>true</IntegratedSecurity>
   </ConnectionProperties>
   <DataSourceID>327d9bfe-c6e8-40e0-bceb-205950d47fcb</DataSourceID>
 </RptDataSource>
