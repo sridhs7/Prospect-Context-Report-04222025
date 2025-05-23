@@ -9,7 +9,7 @@
       <am:Name>SSDTRS</am:Name>
       <am:Version>17.11.35327.3</am:Version>
     </am:UpdatedBy>
-    <am:LastModifiedTimestamp>2025-05-20T14:30:48.0795621Z</am:LastModifiedTimestamp>
+    <am:LastModifiedTimestamp>2025-05-23T14:56:59.4548952Z</am:LastModifiedTimestamp>
   </am:AuthoringMetadata>
   <df:DefaultFontFamily>Segoe UI</df:DefaultFontFamily>
   <AutoRefresh>0</AutoRefresh>
@@ -17,7 +17,7 @@
     <DataSource Name="MSCRM_DataSource">
       <DataSourceReference>MSCRM_DataSource</DataSourceReference>
       <rd:SecurityType>None</rd:SecurityType>
-      <rd:DataSourceID>e82f9c39-bc1e-420a-a598-66f5aaaa3d70</rd:DataSourceID>
+      <rd:DataSourceID>d239e00f-ee2e-4fdd-bb7e-d4bf65edc045</rd:DataSourceID>
     </DataSource>
   </DataSources>
   <DataSets>
@@ -25,18 +25,17 @@
       <Query>
         <DataSourceName>MSCRM_DataSource</DataSourceName>
         <CommandText>-- Personal Details
-With Personal_Details AS(
 select 
-contactId AS CRMAF_contactId,
-elcn_PrimaryID AS ID_NUMBER, 
-elcn_SortName AS PREF_NAME_SORT,
-fullname AS FULL_NAME,
-EMailAddress1 AS EMAIL_ADDRESS
-from FilteredContact cb)
-select pd.*--, pre.elcn_person2idname AS SPOUSE_GUID, pre.elcn_person2idname AS SPOUSE_NAME 
+CRMAF_FilteredContact.contactId AS CRMAF_contactId,
+CRMAF_FilteredContact.elcn_PrimaryID AS ID_NUMBER, 
+CRMAF_FilteredContact.elcn_SortName AS PREF_NAME_SORT,
+CRMAF_FilteredContact.fullname AS FULL_NAME,
+CRMAF_FilteredContact.EMailAddress1 AS EMAIL_ADDRESS
 INTO #temp_personal_details
-from Personal_Details pd
---where FULL_NAME like '%greco%'
+from FilteredContact CRMAF_FilteredContact
+--where CRMAF_FilteredContact.fullname like '%greco%'
+--select pd.*--, pre.elcn_person2idname AS SPOUSE_GUID, pre.elcn_person2idname AS SPOUSE_NAME 
+--from Personal_Details pd
 
 CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(CRMAF_contactId)
 
@@ -400,7 +399,7 @@ drop table #temp_pivoted_education</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>person Id</Value>
+                                  <Value>CRMAF contact Id</Value>
                                   <Style>
                                     <FontFamily />
                                     <FontSize>11pt</FontSize>
@@ -2472,12 +2471,12 @@ drop table #temp_pivoted_education</CommandText>
   </ReportSections>
   <ReportParametersLayout>
     <GridLayoutDefinition>
-      <NumberOfColumns>4</NumberOfColumns>
-      <NumberOfRows>2</NumberOfRows>
+      <NumberOfColumns>1</NumberOfColumns>
+      <NumberOfRows>1</NumberOfRows>
     </GridLayoutDefinition>
   </ReportParametersLayout>
   <Language>en-US</Language>
   <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
   <rd:ReportUnitType>Inch</rd:ReportUnitType>
-  <rd:ReportID>2d2f9d08-d3e5-49b6-baff-4336f12f596a</rd:ReportID>
+  <rd:ReportID>a2330d9f-ead3-444d-aa65-6121a61e9ac6</rd:ReportID>
 </Report>

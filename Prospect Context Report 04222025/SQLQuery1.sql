@@ -1,22 +1,27 @@
 ﻿-- Personal Details
-With Personal_Details AS(
 select 
-contactId AS personId,
-elcn_PrimaryID AS ID_NUMBER, 
-elcn_SortName AS PREF_NAME_SORT,
-fullname AS FULL_NAME,
-EMailAddress1 AS EMAIL_ADDRESS
-from ContactBase cb)
-select pd.*--, pre.elcn_person2idname AS SPOUSE_GUID, pre.elcn_person2idname AS SPOUSE_NAME 
+CRMAF_FilteredContact.contactId AS CRMAF_contactId,
+CRMAF_FilteredContact.elcn_PrimaryID AS ID_NUMBER, 
+CRMAF_FilteredContact.elcn_SortName AS PREF_NAME_SORT,
+CRMAF_FilteredContact.fullname AS FULL_NAME,
+CRMAF_FilteredContact.EMailAddress1 AS EMAIL_ADDRESS
 INTO #temp_personal_details
-from Personal_Details pd
-where FULL_NAME like '%greco%'
+from FilteredContact CRMAF_FilteredContact
 
-CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(personId)
+CREATE NONCLUSTERED INDEX IDX_tcd1 ON #temp_personal_details(CRMAF_contactId)
+
+--GET FILTERED PERSON IDs
+
+select CRMAF_contactId
+INTO #temp_personal_ids
+from #temp_personal_details
+
+CREATE NONCLUSTERED INDEX IDX_tcd_ids ON #temp_personal_ids(CRMAF_contactId)
+
 
 -- TO DO: Get Spouse Advance ID and Constituent
 SELECT 
-    p.personId, 
+    p.CRMAF_contactId, 
     pre.elcn_person2id AS Spouse_Guid, 
     pre.elcn_person2idname AS Spouse_Name, 
     fca.elcn_constituenttypeidname AS Spouse_Constituent_Type,
@@ -24,7 +29,7 @@ SELECT
 INTO #temp_spouse_details
 FROM #temp_personal_details p
 LEFT JOIN Filteredelcn_personalrelationship pre
-    ON p.personId = pre.elcn_person1id
+    ON p.CRMAF_contactId = pre.elcn_person1id
 LEFT JOIN Filteredelcn_constituentaffiliation fca
     ON pre.elcn_person2id = fca.elcn_personid
 LEFT JOIN ContactBase cb
@@ -86,14 +91,17 @@ WHERE
 select * 
 INTO #temp_pivoted_education
 from PivotedEducation
+where PivotedEducation.elcn_personid in (select CRMAF_contactId from #temp_personal_ids);
 
 CREATE NONCLUSTERED INDEX IDX_tcd3 ON #temp_pivoted_education(elcn_personid)
 
 
 
 --Business Info
-select top 1 * from Filteredelcn_businessrelationship fbr
-where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+select top 1
+fbr.elcn_fieldofworkidname, fbr.elcn_jobtitle, fbr.elcn_organizationidname, fbr.modifiedon, fbr.elcn_positionlevelidname
+from Filteredelcn_businessrelationship fbr
+where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
 and fbr.elcn_businessrelationshipstatusidname = 'Active'
 and fbr.elcn_businessrelationshiptypeidname = 'Primary Employer'
 
@@ -107,9 +115,10 @@ elcn_postalcode AS BUS_ZIPCODE
 from Filteredelcn_addressassociation addas
 left join Filteredelcn_address fea -- connect with elcn_personid
 on addas.elcn_addressid = fea.elcn_addressid
-where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
 and elcn_addressstatusidname = 'Current' 
 and elcn_addresstypeidname = 'Business'
+and statuscodename = 'Active'
 
 --Personal Address Info
 select top 1
@@ -121,16 +130,17 @@ elcn_postalcode AS BUS_ZIPCODE
 from Filteredelcn_addressassociation addas
 left join Filteredelcn_address fea -- connect with elcn_personid
 on addas.elcn_addressid = fea.elcn_addressid
-where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
 and elcn_addressstatusidname = 'Current' 
 and elcn_addresstypeidname = 'Home'
+and statuscodename = 'Active'
 
 --Business Phone
 select top 1
 elcn_personid,
 elcn_phonenumber AS BUS_PHONE
 from Filteredelcn_phone
-where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
 and elcn_phonestatusidname = 'Active'
 and elcn_phonetypename = 'Business'
 
@@ -139,7 +149,7 @@ select top 1
 elcn_personid,
 elcn_phonenumber AS BUS_PHONE
 from Filteredelcn_phone
-where elcn_personid = '0CF255E9-B005-4794-AD2F-382F371D6719'
+where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
 and elcn_phonestatusidname = 'Active'
 and elcn_phonetypename = 'Home'
 
@@ -148,7 +158,7 @@ and elcn_phonetypename = 'Home'
 WITH SpouseRanked AS (
     SELECT *,
         ROW_NUMBER() OVER (
-            PARTITION BY personId 
+            PARTITION BY CRMAF_contactId 
             ORDER BY 
                 CASE 
                     WHEN Spouse_Constituent_Type = 'Alumni' THEN 1 
@@ -158,7 +168,7 @@ WITH SpouseRanked AS (
     FROM #temp_spouse_details
 )
 SELECT 
-    pd.personId,
+    pd.CRMAF_contactId,
     pd.ID_NUMBER,
     pd.PREF_NAME_SORT,
     pd.FULL_NAME,
@@ -174,14 +184,14 @@ SELECT
 pe.*
 FROM #temp_personal_details pd
 LEFT JOIN SpouseRanked sr
-    ON pd.personId = sr.personId
+    ON pd.CRMAF_contactId = sr.CRMAF_contactId
     AND sr.rn = 1
 LEFT JOIN #temp_pivoted_education pe
-ON pd.personId = pe.elcn_personid
+ON pd.CRMAF_contactId = pe.elcn_personid
 
 
 
 drop table #temp_personal_details
 drop table #temp_spouse_details
 drop table #temp_pivoted_education
-
+drop table #temp_personal_ids
