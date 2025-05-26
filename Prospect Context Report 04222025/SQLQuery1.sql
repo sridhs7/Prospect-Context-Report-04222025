@@ -98,60 +98,105 @@ CREATE NONCLUSTERED INDEX IDX_tcd3 ON #temp_pivoted_education(elcn_personid)
 
 
 --Business Info
-select top 1
-fbr.elcn_fieldofworkidname, fbr.elcn_jobtitle, fbr.elcn_organizationidname, fbr.modifiedon, fbr.elcn_positionlevelidname
-from Filteredelcn_businessrelationship fbr
-where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
-and fbr.elcn_businessrelationshipstatusidname = 'Active'
-and fbr.elcn_businessrelationshiptypeidname = 'Primary Employer'
+;WITH RankedBusinessInfo AS (
+  SELECT 
+    fbr.elcn_personid,
+    fbr.elcn_fieldofworkidname, 
+    fbr.elcn_jobtitle, 
+    fbr.elcn_organizationidname, 
+    fbr.modifiedon, 
+    fbr.elcn_positionlevelidname,
+    ROW_NUMBER() OVER (
+      PARTITION BY fbr.elcn_personid 
+      ORDER BY fbr.modifiedon DESC
+    ) AS rn
+  FROM Filteredelcn_businessrelationship fbr
+  WHERE fbr.elcn_personid IN (SELECT CRMAF_contactId FROM #temp_personal_ids)
+    AND fbr.elcn_businessrelationshipstatusidname = 'Active'
+    AND fbr.elcn_businessrelationshiptypeidname = 'Primary Employer'
+)
+SELECT * INTO #temp_business_info FROM RankedBusinessInfo WHERE rn = 1;
+
 
 --Business Address Info
-select  top 1 
-elcn_street1 AS BUS_STREET1,
-elcn_city AS BUS_CITY,
-elcn_stateprovinceidname AS BUS_STATE,
-elcn_countryname AS BUS_COUNTRY,
-elcn_postalcode AS BUS_ZIPCODE
-from Filteredelcn_addressassociation addas
-left join Filteredelcn_address fea -- connect with elcn_personid
-on addas.elcn_addressid = fea.elcn_addressid
-where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
-and elcn_addressstatusidname = 'Current' 
-and elcn_addresstypeidname = 'Business'
-and statuscodename = 'Active'
+WITH RankedBusinessAddress AS (
+  SELECT 
+    addas.elcn_personid,
+    fea.elcn_street1 AS BUS_STREET1,
+    fea.elcn_city AS BUS_CITY,
+    fea.elcn_stateprovinceidname AS BUS_STATE,
+    fea.elcn_countryname AS BUS_COUNTRY,
+    fea.elcn_postalcode AS BUS_ZIPCODE,
+    ROW_NUMBER() OVER (
+      PARTITION BY addas.elcn_personid 
+      ORDER BY fea.modifiedon DESC
+    ) AS rn
+  FROM Filteredelcn_addressassociation addas
+  LEFT JOIN Filteredelcn_address fea ON addas.elcn_addressid = fea.elcn_addressid
+  WHERE addas.elcn_personid IN (SELECT CRMAF_contactId FROM #temp_personal_ids)
+    AND addas.elcn_addressstatusidname = 'Current' 
+    AND addas.elcn_addresstypeidname = 'Business'
+    AND addas.statuscodename = 'Active'
+)
+SELECT * INTO #temp_business_address FROM RankedBusinessAddress WHERE rn = 1;
+
 
 --Personal Address Info
-select top 1
-elcn_street1 AS BUS_STREET1,
-elcn_city AS BUS_CITY,
-elcn_stateprovinceidname AS BUS_STATE,
-elcn_countryname AS BUS_COUNTRY,
-elcn_postalcode AS BUS_ZIPCODE
-from Filteredelcn_addressassociation addas
-left join Filteredelcn_address fea -- connect with elcn_personid
-on addas.elcn_addressid = fea.elcn_addressid
-where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
-and elcn_addressstatusidname = 'Current' 
-and elcn_addresstypeidname = 'Home'
-and statuscodename = 'Active'
+WITH RankedPersonalAddress AS (
+  SELECT 
+    addas.elcn_personid,
+    fea.elcn_street1 AS HOME_STREET1,
+    fea.elcn_city AS HOME_CITY,
+    fea.elcn_stateprovinceidname AS HOME_STATE,
+    fea.elcn_countryname AS HOME_COUNTRY,
+    fea.elcn_postalcode AS HOME_ZIPCODE,
+    ROW_NUMBER() OVER (
+      PARTITION BY addas.elcn_personid 
+      ORDER BY fea.modifiedon DESC
+    ) AS rn
+  FROM Filteredelcn_addressassociation addas
+  LEFT JOIN Filteredelcn_address fea ON addas.elcn_addressid = fea.elcn_addressid
+  WHERE addas.elcn_personid IN (SELECT CRMAF_contactId FROM #temp_personal_ids)
+    AND addas.elcn_addressstatusidname = 'Current' 
+    AND addas.elcn_addresstypeidname = 'Home'
+    AND addas.statuscodename = 'Active'
+)
+SELECT * INTO #temp_home_address FROM RankedPersonalAddress WHERE rn = 1;
+
 
 --Business Phone
-select top 1
-elcn_personid,
-elcn_phonenumber AS BUS_PHONE
-from Filteredelcn_phone
-where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
-and elcn_phonestatusidname = 'Active'
-and elcn_phonetypename = 'Business'
+WITH RankedBusinessPhone AS (
+  SELECT 
+    elcn_personid,
+    elcn_phonenumber AS BUS_PHONE,
+    ROW_NUMBER() OVER (
+      PARTITION BY elcn_personid 
+      ORDER BY modifiedon DESC
+    ) AS rn
+  FROM Filteredelcn_phone
+  WHERE elcn_personid IN (SELECT CRMAF_contactId FROM #temp_personal_ids)
+    AND elcn_phonestatusidname = 'Active'
+    AND elcn_phonetypename = 'Business'
+)
+SELECT * INTO #temp_business_phone FROM RankedBusinessPhone WHERE rn = 1;
+
 
 --Home Phone
-select top 1
-elcn_personid,
-elcn_phonenumber AS BUS_PHONE
-from Filteredelcn_phone
-where elcn_personid in (select CRMAF_contactId from #temp_personal_ids)
-and elcn_phonestatusidname = 'Active'
-and elcn_phonetypename = 'Home'
+WITH RankedHomePhone AS (
+  SELECT 
+    elcn_personid,
+    elcn_phonenumber AS HOME_PHONE,
+    ROW_NUMBER() OVER (
+      PARTITION BY elcn_personid 
+      ORDER BY modifiedon DESC
+    ) AS rn
+  FROM Filteredelcn_phone
+  WHERE elcn_personid IN (SELECT CRMAF_contactId FROM #temp_personal_ids)
+    AND elcn_phonestatusidname = 'Active'
+    AND elcn_phonetypename = 'Home'
+)
+SELECT * INTO #temp_home_phone FROM RankedHomePhone WHERE rn = 1;
+
 
 ------**** DATA CONSOLIDATION****---------------
 
@@ -160,10 +205,7 @@ WITH SpouseRanked AS (
         ROW_NUMBER() OVER (
             PARTITION BY CRMAF_contactId 
             ORDER BY 
-                CASE 
-                    WHEN Spouse_Constituent_Type = 'Alumni' THEN 1 
-                    ELSE 2 
-                END
+                CASE WHEN Spouse_Constituent_Type = 'Alumni' THEN 1 ELSE 2 END
         ) AS rn
     FROM #temp_spouse_details
 )
@@ -173,21 +215,33 @@ SELECT
     pd.PREF_NAME_SORT,
     pd.FULL_NAME,
     pd.EMAIL_ADDRESS,
+    
     sr.Spouse_Guid,
     sr.Spouse_Name,
     sr.Spouse_Constituent_Type,
     sr.Spouse_ID_NUMBER,
-    CASE 
-        WHEN sr.Spouse_Constituent_Type = 'Alumni' THEN 'Y'
-        ELSE 'N'
-    END AS Is_Spouse_Alumni,
-pe.*
+    CASE WHEN sr.Spouse_Constituent_Type = 'Alumni' THEN 'Y' ELSE 'N' END AS Is_Spouse_Alumni,
+
+    pe.*,
+    bi.elcn_fieldofworkidname,
+    bi.elcn_jobtitle,
+    bi.elcn_organizationidname,
+    bi.elcn_positionlevelidname,
+    
+    ba.BUS_STREET1, ba.BUS_CITY, ba.BUS_STATE, ba.BUS_COUNTRY, ba.BUS_ZIPCODE,
+    ha.HOME_STREET1, ha.HOME_CITY, ha.HOME_STATE, ha.HOME_COUNTRY, ha.HOME_ZIPCODE,
+    bp.BUS_PHONE,
+    hp.HOME_PHONE
+
 FROM #temp_personal_details pd
-LEFT JOIN SpouseRanked sr
-    ON pd.CRMAF_contactId = sr.CRMAF_contactId
-    AND sr.rn = 1
-LEFT JOIN #temp_pivoted_education pe
-ON pd.CRMAF_contactId = pe.elcn_personid
+LEFT JOIN SpouseRanked sr ON pd.CRMAF_contactId = sr.CRMAF_contactId AND sr.rn = 1
+LEFT JOIN #temp_pivoted_education pe ON pd.CRMAF_contactId = pe.elcn_personid
+LEFT JOIN #temp_business_info bi ON pd.CRMAF_contactId = bi.elcn_personid
+LEFT JOIN #temp_business_address ba ON pd.CRMAF_contactId = ba.elcn_personid
+LEFT JOIN #temp_home_address ha ON pd.CRMAF_contactId = ha.elcn_personid
+LEFT JOIN #temp_business_phone bp ON pd.CRMAF_contactId = bp.elcn_personid
+LEFT JOIN #temp_home_phone hp ON pd.CRMAF_contactId = hp.elcn_personid;
+
 
 
 
