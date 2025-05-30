@@ -4,7 +4,10 @@ CRMAF_FilteredContact.contactId AS CRMAF_contactId,
 CRMAF_FilteredContact.elcn_PrimaryID AS ID_NUMBER, 
 CRMAF_FilteredContact.elcn_SortName AS PREF_NAME_SORT,
 CRMAF_FilteredContact.fullname AS FULL_NAME,
-CRMAF_FilteredContact.EMailAddress1 AS EMAIL_ADDRESS
+CRMAF_FilteredContact.EMailAddress1 AS EMAIL_ADDRESS,
+CRMAF_FilteredContact.elcn_PrimaryProspectAssignment AS ASSIGNED_NAME,
+CRMAF_FilteredContact.elcn_totalamountreceived AS LIFETIME_GIVING,
+CRMAF_FilteredContact.elcn_lastcontributiondate AS LAST_GIFT_DT
 INTO #temp_personal_details
 from FilteredContact CRMAF_FilteredContact
 
@@ -150,6 +153,7 @@ WITH RankedPersonalAddress AS (
     fea.elcn_stateprovinceidname AS HOME_STATE,
     fea.elcn_countryname AS HOME_COUNTRY,
     fea.elcn_postalcode AS HOME_ZIPCODE,
+    fea.modifiedon AS HOME_MOD_DT,
     ROW_NUMBER() OVER (
       PARTITION BY addas.elcn_personid 
       ORDER BY fea.modifiedon DESC
@@ -215,6 +219,9 @@ SELECT
     pd.PREF_NAME_SORT,
     pd.FULL_NAME,
     pd.EMAIL_ADDRESS,
+    pd.ASSIGNED_NAME,
+    pd.LIFETIME_GIVING,
+    pd.LAST_GIFT_DT,
     
     sr.Spouse_Guid,
     sr.Spouse_Name,
@@ -229,7 +236,7 @@ SELECT
     bi.elcn_positionlevelidname,
     
     ba.BUS_STREET1, ba.BUS_CITY, ba.BUS_STATE, ba.BUS_COUNTRY, ba.BUS_ZIPCODE,
-    ha.HOME_STREET1, ha.HOME_CITY, ha.HOME_STATE, ha.HOME_COUNTRY, ha.HOME_ZIPCODE,
+    ha.HOME_STREET1, ha.HOME_CITY, ha.HOME_STATE, ha.HOME_COUNTRY, ha.HOME_ZIPCODE, ha.HOME_MOD_DT,
     bp.BUS_PHONE,
     hp.HOME_PHONE
 
