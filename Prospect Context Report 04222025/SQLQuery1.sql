@@ -109,6 +109,7 @@ CREATE NONCLUSTERED INDEX IDX_tcd3 ON #temp_pivoted_education(elcn_personid)
     fbr.elcn_organizationidname, 
     fbr.modifiedon, 
     fbr.elcn_positionlevelidname,
+    fbr.elcn_businessrelationshipstatusidname,
     ROW_NUMBER() OVER (
       PARTITION BY fbr.elcn_personid 
       ORDER BY fbr.modifiedon DESC
@@ -234,6 +235,8 @@ SELECT
     bi.elcn_jobtitle,
     bi.elcn_organizationidname,
     bi.elcn_positionlevelidname,
+    bi.elcn_businessrelationshipstatusidname,
+    bi.modifiedon,
     
     ba.BUS_STREET1, ba.BUS_CITY, ba.BUS_STATE, ba.BUS_COUNTRY, ba.BUS_ZIPCODE,
     ha.HOME_STREET1, ha.HOME_CITY, ha.HOME_STATE, ha.HOME_COUNTRY, ha.HOME_ZIPCODE, ha.HOME_MOD_DT,
